@@ -34,6 +34,7 @@
         <label>🔍 عرض الأصناف لقسم:</label>
         <select id="filterCategory" onchange="renderTable()">
             <option value="الكل">عرض كل الأقسام</option>
+            <!-- سيتم إضافة الأقسام هنا تلقائياً -->
         </select>
     </div>
 
@@ -56,7 +57,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwOcZQDW4MjJcLiDc4WQtN3ohAS9ch0esFJjDtClGb5vsAdcuqHDHGIKKYl_e0tBmeijg/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbw4VJ3mTbIsu-i3UAJUddPFIvHro4YlPYBL3U1A1k87a9CPhHlZBwAbJbjCUXty0tsGLw/exec';
         let globalData = [];
         let categories = new Set();
 
@@ -66,6 +67,7 @@
                 const data = await response.json();
                 globalData = data;
                 
+                // استخراج الأقسام للفلتر
                 const filterSelect = document.getElementById('filterCategory');
                 data.forEach(item => categories.add(item.sheet));
                 categories.forEach(cat => {
@@ -99,8 +101,8 @@
                     <tr>
                         <td><span class="cat-badge">${item.sheet}</span></td>
                         <td style="font-weight: 600;">${item.item}</td>
-                        <td>${item.quantity}</td>
                         <td>${item.unit}</td>
+                        <td>${item.quantity}</td>
                         <td style="color: #ef4444;">${item.issued}</td>
                         <td style="font-size: 1.1em; ${isWarning}">${item.remaining}</td>
                     </tr>
