@@ -172,7 +172,7 @@
                     groupedData[sheetName].forEach(item => {
                         let option = document.createElement('option');
                         option.value = `${item.sheet}|${item.item}`;
-                        option.textContent = `${item.item} (${item.quantity})`;
+                        option.textContent = `${item.item} (${item.unit})`;
                         optGroup.appendChild(option);
                     });
                     select.appendChild(optGroup);
@@ -206,8 +206,8 @@
                     <tr>
                         <td><span class="cat-badge">${item.sheet}</span></td>
                         <td style="font-weight: 600;">${item.item}</td>
-                        <td>${item.quantity}</td>
                         <td>${item.unit}</td>
+                        <td>${item.quantity}</td>
                         <td style="color: #ef4444;">${item.issued}</td>
                         <td style="font-size: 1.1em; ${isWarning}">${item.remaining}</td>
                     </tr>
