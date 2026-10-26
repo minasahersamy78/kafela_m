@@ -56,7 +56,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzfrwxxZfuHXMTJ24VXFWiuqwshcPDPwqf3gl8QSI8e7zRTcMwlSii7v-p6SgBnVk3NSg/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwOcZQDW4MjJcLiDc4WQtN3ohAS9ch0esFJjDtClGb5vsAdcuqHDHGIKKYl_e0tBmeijg/exec';
         let globalData = [];
         let categories = new Set();
 
@@ -99,8 +99,8 @@
                     <tr>
                         <td><span class="cat-badge">${item.sheet}</span></td>
                         <td style="font-weight: 600;">${item.item}</td>
-                        <td>${item.unit}</td>
                         <td>${item.quantity}</td>
+                        <td>${item.unit}</td>
                         <td style="color: #ef4444;">${item.issued}</td>
                         <td style="font-size: 1.1em; ${isWarning}">${item.remaining}</td>
                     </tr>
