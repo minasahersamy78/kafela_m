@@ -90,8 +90,8 @@
                     <tr>
                         <th>القسم</th>
                         <th>اسم الصنف</th>
-                        <th>الكمية</th>
                         <th>الوحدة</th>
+                        <th>الإجمالي</th>
                         <th>المنصرف</th>
                         <th>المتبقي</th>
                     </tr>
@@ -104,7 +104,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyPq0BHN_rzdMfY9o1CC6GSv2-Ik38EDa2pQvqn3Jnmu3HE9PPxZY_N-uNvQ91A4lT7BQ/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwOcZQDW4MjJcLiDc4WQtN3ohAS9ch0esFJjDtClGb5vsAdcuqHDHGIKKYl_e0tBmeijg/exec';
         
         let globalData = [];
         let categories = new Set();
@@ -172,7 +172,7 @@
                     groupedData[sheetName].forEach(item => {
                         let option = document.createElement('option');
                         option.value = `${item.sheet}|${item.item}`;
-                        option.textContent = `${item.item} (${item.unit})`;
+                        option.textContent = `${item.item} (${item.quantity})`;
                         optGroup.appendChild(option);
                     });
                     select.appendChild(optGroup);
