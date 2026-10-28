@@ -106,14 +106,12 @@
                 <tr>
                     <th>القسم</th>
                     <th>اسم الصنف</th>
-                    <th>الكمية</th>
                     <th>الوحدة</th>
-                    <th>المنصرف</th>
                     <th>المتبقي</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="6" style="padding:40px; color:#38bdf8; font-weight: bold;">⏳ جاري سحب بيانات المخزن...</td></tr>
+                <tr><td colspan="4" style="padding:40px; color:#38bdf8; font-weight: bold;">⏳ جاري سحب بيانات المخزن...</td></tr>
             </tbody>
         </table>
     </div>
@@ -137,7 +135,7 @@
 
                 renderTable();
             } catch (error) {
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="6" style="color: #ef4444; font-weight: bold; padding: 20px;">⚠️ حدث خطأ في تحميل البيانات.</td></tr>';
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="4" style="color: #ef4444; font-weight: bold; padding: 20px;">⚠️ حدث خطأ في تحميل البيانات.</td></tr>';
             }
         }
 
@@ -152,7 +150,7 @@
             }
 
             if (filteredData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px;">لا توجد أصناف في هذا القسم.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px;">لا توجد أصناف في هذا القسم.</td></tr>';
                 return;
             }
 
@@ -162,9 +160,7 @@
                     <tr>
                         <td><span class="cat-badge">${item.sheet}</span></td>
                         <td style="font-weight: 700; color: #f8fafc;">${item.item}</td>
-                        <td>${item.quantity}</td>
                         <td>${item.unit}</td>
-                        <td style="color: #ef4444;">${item.issued}</td>
                         <td style="font-size: 1.15em; ${isWarning}">${item.remaining}</td>
                     </tr>
                 `;
