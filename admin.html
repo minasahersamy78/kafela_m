@@ -199,9 +199,9 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr><th>القسم</th><th>الطالب</th><th>المنتج</th><th>الكمية المطلوبة</th><th>صُرف من المخزن</th><th>مطلوب شراؤه 🛒</th><th>التاريخ</th><th>الحالة</th><th>إجراءات التوريد</th></tr>
+                        <tr><th>القسم</th><th>الطالب</th><th>المنتج</th><th>الكمية المطلوبة</th><th>الموجود بالمخزن حالياً 📦</th><th>صُرف من المخزن</th><th>مطلوب شراؤه 🛒</th><th>التاريخ</th><th>الحالة</th><th>إجراءات التوريد</th></tr>
                     </thead>
-                    <tbody id="purchaseTableBody"><tr><td colspan="9">⏳ جاري تحميل البيانات...</td></tr></tbody>
+                    <tbody id="purchaseTableBody"><tr><td colspan="10">⏳ جاري تحميل البيانات...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -225,7 +225,7 @@
     </div>
 
     <script>
-        const purchaseURL = 'https://script.google.com/macros/s/AKfycbw3aew4kdWyrtzcpEm51CAndC-XGwC1ZfuylzVEqL57y1SkI-pTKJS54i8niWExWtAhgg/exec'; // رابط المشتريات الجديد
+        const purchaseURL = 'https://script.google.com/macros/s/AKfycbwZOLwntroP8_uXGI2j2z3sGKagwxr3F14MJiIaUF5f6Hly6D0BkosGuo8pJzuv1uZraw/exec'; // رابط المشتريات الجديد
         const inventoryURL = 'https://script.google.com/macros/s/AKfycbzMZ-4vIawAyFXmcBHsxUauSXIBLD7w27UoFUFuoR0U21nolJgbEAwLNWyAPwPcdAeG0w/exec'; // رابط المخزن الجديد
         
         let purchaseDataGlobal = []; 
@@ -279,6 +279,7 @@
             return r.json();
         }
 
+        const normAr = t => String(t || '').trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
         const escH = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
         function renderHistory() {
@@ -306,7 +307,7 @@
                 const needed = parseFloat(r.purchase_qty_needed) || 0;
                 const done = r.status === 'PO_CONFIRMED';
                 const boughtQty = done ? needed : 0;
-                let st = '<span class="status-fulfilled">مُصرف بالكامل من المخزن ✅</span>';
+                let st = '<span class="status-fulfilled">تم التوريد من المخزن ✅</span>';
                 if (r.status === 'PENDING_APPROVAL') st = '<span class="status-partial">بانتظار التأكيد ⏳</span>';
                 else if (r.status === 'REJECTED') st = '<span style="color:#ef4444; font-weight:bold;">مرفوضة ❌</span>';
                 else if (done) st = '<span class="status-fulfilled">تم الشراء والتوريد ✅</span>';
@@ -421,6 +422,7 @@
                 }
 
                 filterInventoryTable();
+                renderPurchaseTable();
             } catch (e) {
                 console.error(e);
             }
@@ -560,7 +562,7 @@
             let filteredData = purchaseDataGlobal;
             if (filterValue !== 'الكل') filteredData = purchaseDataGlobal.filter(row => row.category === filterValue);
             if (!filteredData || filteredData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9">لا توجد طلبات مسجلة.</td></tr>'; return;
+                tbody.innerHTML = '<tr><td colspan="10">لا توجد طلبات مسجلة.</td></tr>'; return;
             }
             filteredData.forEach(row => {
                 let statusClass = '', statusText = '';
@@ -569,26 +571,36 @@
                 let needed = row.purchase_qty_needed || 0;
                 let dateDisplay = (row.date && row.date !== "1969-12-31" && row.date !== "undefined") ? row.date : "غير محدد";
 
-                if (row.status === 'PENDING_APPROVAL') { statusClass = 'status-partial'; statusText = 'بانتظار التأكيد ⏳'; }
+                if (row.status === 'PENDING_APPROVAL') { statusClass = 'status-partial'; statusText = needed > 0 ? 'بانتظار التأكيد ⏳' : 'بانتظار التوريد من المخزن ⏳'; }
                 else if (row.status === 'PO_CONFIRMED') { statusClass = 'status-fulfilled'; statusText = 'تم الشراء والتوريد ✅'; }
                 else if (needed > 0) { statusClass = 'status-partial'; statusText = 'صُرف المتاح + مطلوب شراء'; }
-                else { statusClass = 'status-fulfilled'; statusText = 'مُصرف بالكامل من المخزن ✅'; }
+                else { statusClass = 'status-fulfilled'; statusText = 'تم التوريد من المخزن ✅'; }
 
                 const isPending = row.status === 'PENDING_APPROVAL', isDone = row.status === 'PO_CONFIRMED';
+                const stockItem = inventoryDataGlobal.find(i => i.sheet === row.category && normAr(i.item) === normAr(row.item)) || inventoryDataGlobal.find(i => normAr(i.item) === normAr(row.item));
+                let stockHtml = inventoryDataGlobal.length ? '<span style="color:#94a3b8">غير موجود</span>' : '⏳';
+                if (stockItem) {
+                    const rem = parseFloat(stockItem.remaining) || 0;
+                    const color = rem <= 0 ? '#ef4444' : (isPending && rem < (parseFloat(reqQty) || 0) ? '#f59e0b' : '#10b981');
+                    stockHtml = `<span style="color:${color}; font-weight:bold;">${escH(rem)} ${escH(stockItem.unit || unit)}</span>`;
+                }
                 const prop = isPending ? ' <small style="color:#94a3b8">(مقترح)</small>' : '';
-                let actionHtml = isPending ? `<button class="btn-confirm" onclick="approveRequest(${row.row}, this)">تأكيد الصرف ✅</button>`
-                    : (needed > 0 && !isDone) ? `<button class="btn-confirm" onclick="confirmPurchaseOrder(${row.row}, this)">تأكيد الشراء 📦</button>` : `-`;
+                const supplyBtn = isPending ? `<button class="btn-confirm" onclick="approveRequest(${row.row}, this)">📦 توريد من المخزن</button>`
+                    : (needed > 0 && !isDone) ? `<button class="btn-confirm" onclick="confirmPurchaseOrder(${row.row}, this)">🛒 تأكيد الشراء</button>` : '';
+                const rejectBtn = !isPending ? '' : `<button class="btn-delete" onclick="deletePurchaseRecord(${row.row}, this)">رفض العملية ❌</button>`;
+                const actionHtml = (supplyBtn || rejectBtn) ? `<div style="display:flex; flex-direction:column; gap:6px; min-width:150px;">${supplyBtn}${rejectBtn}</div>` : '-';
 
                 tbody.innerHTML += `<tr>
                     <td><span class="cat-badge">${cat}</span></td>
                     <td style="color:#38bdf8; font-weight:bold;">${reqName}</td>
                     <td style="font-weight:bold;">${item}</td>
                     <td>${reqQty} ${unit}</td>
+                    <td>${stockHtml}</td>
                     <td>${fulfilled} ${unit}${prop}</td>
                     <td style="font-weight: bold; color: ${needed > 0 ? '#ef4444' : '#f8fafc'};">${needed > 0 ? needed + ' ' + unit : '0'}${prop}</td>
                     <td>${dateDisplay}</td>
                     <td class="${statusClass}">${statusText}</td>
-                    <td>${actionHtml} ${isDone ? '' : `<button class="btn-delete" style="margin-top: 5px;" onclick="deletePurchaseRecord(${row.row}, this)">رفض العملية ❌</button>`}</td>
+                    <td>${actionHtml}</td>
                 </tr>`;
             });
         }
@@ -634,7 +646,8 @@
 
                 if (errMsg(result)) { alert("⚠️ " + errMsg(result)); return; }
 
-                alert(`✅ تم تسجيل الطلب وهو بانتظار التأكيد (المتاح ${result.fulfilled} — الناقص ${result.needed}). لم يتم خصم أي شيء من المخزن لحد ما تأكد الصرف.`);
+                if (!result.pending) alert('🚨 تحذير: سكريبت المشتريات المنشور نسخة قديمة، وده الطلب اتخصم من المخزن فعلاً (' + result.fulfilled + '). انشر النسخة الجديدة (Manage deployments ← Edit ← New version ← Deploy) وبعدها راجع رصيد الصنف.');
+                else alert(`✅ تم تسجيل الطلب وهو بانتظار التأكيد (المتاح ${result.fulfilled} — الناقص ${result.needed}). لم يتم خصم أي شيء من المخزن لحد ما تضغط توريد من المخزن.`);
                 if (result.foundInStock === false) alert('ℹ️ الصنف مش موجود في المخزن بنفس الاسم/القسم، فاتحسب كله مطلوب شراء.');
 
                 document.getElementById('purchaseForm').reset();
@@ -655,14 +668,15 @@
         }
 
         async function approveRequest(rowNum, btn) {
-            if (!confirm('✅ تأكيد الصرف؟ هيتخصم المتاح من المخزن دلوقتي.')) return;
+            if (!confirm('📦 توريد من المخزن؟ هيتخصم المتاح من المخزن دلوقتي.')) return;
             let originalText = btn.innerText; btn.innerText = '⏳'; btn.disabled = true;
+            const rejBtns = [...btn.parentElement.querySelectorAll('.btn-delete')]; rejBtns.forEach(b => b.style.display = 'none');
             try {
                 const r = await (await fetch(purchaseURL, { method: 'POST', body: JSON.stringify({ action: 'approve', row: rowNum, pass: activeToken }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })).json();
-                if (errMsg(r)) { alert('⚠️ ' + errMsg(r)); btn.innerText = originalText; btn.disabled = false; return; }
-                alert(r.needed > 0 ? `✅ تم صرف ${r.fulfilled} من المخزن، والناقص ${r.needed} مطلوب شراؤه.` : `✅ تم صرف كامل الكمية (${r.fulfilled}) من المخزن.`);
+                if (errMsg(r)) { alert('⚠️ ' + errMsg(r)); btn.innerText = originalText; btn.disabled = false; rejBtns.forEach(b => b.style.display = ''); return; }
+                alert(r.needed > 0 ? `✅ تم توريد ${r.fulfilled} من المخزن، والناقص ${r.needed} مطلوب شراؤه.` : `✅ تم توريد كامل الكمية (${r.fulfilled}) من المخزن.`);
                 await reloadPurchaseData(); await loadInventoryData();
-            } catch (e) { alert('⚠️ حدث خطأ!'); btn.innerText = originalText; btn.disabled = false; }
+            } catch (e) { alert('⚠️ حدث خطأ!'); btn.innerText = originalText; btn.disabled = false; rejBtns.forEach(b => b.style.display = ''); }
         }
 
         async function deletePurchaseRecord(rowNum, btn) {
