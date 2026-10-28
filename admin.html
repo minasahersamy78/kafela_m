@@ -63,6 +63,10 @@
     </div>
 
     <div id="admin-content">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+            <button id="refreshBtn" class="btn-primary" onclick="refreshAll()">🔄 تحديث البيانات</button>
+            <button class="btn-delete" onclick="logout()">🚪 تسجيل خروج</button>
+        </div>
         <!-- ================= القسم الأول: إدارة المخزون ================= -->
         <div class="section-header">📦 أولاً: إدارة رصيد المخزون</div>
 
@@ -221,12 +225,54 @@
     </div>
 
     <script>
-        const purchaseURL = 'https://script.google.com/macros/s/AKfycbwCK4XV9V3yhqzgeRi9-v6kvP_jN9ypgtXQc7uh3c3-CU-MfkhwI__cr0JyFAjB8OSS6Q/exec'; // رابط المشتريات الجديد
+        const purchaseURL = 'https://script.google.com/macros/s/AKfycbw3aew4kdWyrtzcpEm51CAndC-XGwC1ZfuylzVEqL57y1SkI-pTKJS54i8niWExWtAhgg/exec'; // رابط المشتريات الجديد
         const inventoryURL = 'https://script.google.com/macros/s/AKfycbzMZ-4vIawAyFXmcBHsxUauSXIBLD7w27UoFUFuoR0U21nolJgbEAwLNWyAPwPcdAeG0w/exec'; // رابط المخزن الجديد
         
         let purchaseDataGlobal = []; 
         let inventoryDataGlobal = [];
-        let activeToken = ''; 
+        let activeToken = '';
+        // رابط سكريبت سجل الطلبات (الصقه هنا بعد النشر). لو فاضي السجل هيشتغل زي الأول بدون حفظ دائم.
+        const historyURL = 'https://script.google.com/macros/s/AKfycbxEadAjxysbvSYkCicB1AfmKP--JBPoNNHIwhE605rXk2o-z1pQxEi6PPdAhvWHkV9OSA/exec';
+        let historyDataGlobal = [], historyLoaded = false, historyError = '';
+        const histSource = () => historyURL ? historyDataGlobal : purchaseDataGlobal;
+
+        async function fetchPurchases() {
+            const r = await fetch(purchaseURL + "?pass=" + encodeURIComponent(activeToken));
+            const d = await r.json();
+            return Array.isArray(d) ? d : [];
+        }
+        async function syncHistory(rows) {
+            if (!historyURL) return;
+            try {
+                const list = (rows || purchaseDataGlobal).slice().sort((a, b) => (a.row || 0) - (b.row || 0));
+                if (!list.length) return;
+                await fetch(historyURL, { method: 'POST', body: JSON.stringify({ action: 'sync', pass: activeToken, rows: list }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+            } catch (e) { console.warn('history sync failed', e); }
+        }
+        async function loadHistory() {
+            if (!historyURL) return;
+            try {
+                const txt = await (await fetch(historyURL + '?action=getHistory&pass=' + encodeURIComponent(activeToken))).text();
+                let d; try { d = JSON.parse(txt); } catch (e) { throw new Error('الرابط مش بيرجع بيانات (تأكد إن النشر Anyone وإن الرابط بينتهي بـ /exec)'); }
+                if (!Array.isArray(d)) throw new Error((d && d.error) || 'رد غير متوقع من سكريبت السجل');
+                historyDataGlobal = d.reverse(); historyLoaded = true; historyError = '';
+            } catch (e) {
+                console.warn('history load failed', e);
+                historyLoaded = false; historyError = e.message || String(e);
+            }
+            renderHistory();
+        }
+        async function refreshAll() {
+            const b = document.getElementById('refreshBtn');
+            b.disabled = true; b.innerText = '⏳ جاري التحديث...';
+            try { await reloadPurchaseData(); await loadInventoryData(); }
+            finally { b.disabled = false; b.innerText = '🔄 تحديث البيانات'; }
+        }
+        function logout() {
+            try { sessionStorage.removeItem('adminPass'); } catch (e) {}
+            location.reload();
+        }
+
 
         async function inventoryPost(obj) {
             const r = await fetch(inventoryURL, { method: 'POST', body: JSON.stringify(obj), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
@@ -237,21 +283,23 @@
 
         function renderHistory() {
             const tbody = document.getElementById('historyTableBody');
+            if (historyURL && !historyLoaded) { tbody.innerHTML = historyError ? `<tr><td colspan="12" style="color:#ef4444;">⚠️ تعذر تحميل السجل: ${escH(historyError)}</td></tr>` : '<tr><td colspan="12">⏳ جاري تحميل السجل...</td></tr>'; document.getElementById('histSummary').textContent = ''; return; }
             const sel = document.getElementById('histCategory');
             const q = document.getElementById('histSearch').value.trim().toLowerCase();
 
             const cur = sel.value;
-            const cats = [...new Set(purchaseDataGlobal.map(r => r.category).filter(Boolean))];
+            const cats = [...new Set(histSource().map(r => r.category).filter(Boolean))];
             sel.innerHTML = '<option value="الكل">كل الأقسام</option>' + cats.map(c => `<option value="${escH(c)}">${escH(c)}</option>`).join('');
             sel.value = cats.includes(cur) ? cur : 'الكل';
 
-            const list = purchaseDataGlobal.filter(r =>
+            const list = histSource().filter(r =>
                 (sel.value === 'الكل' || r.category === sel.value) &&
                 (!q || `${r.requesterName} ${r.item} ${r.contactNumber}`.toLowerCase().includes(q)));
 
             let bought = 0, waiting = 0;
-            list.forEach(r => { if (r.status === 'PO_CONFIRMED') bought++; else if ((parseFloat(r.purchase_qty_needed) || 0) > 0) waiting++; });
-            document.getElementById('histSummary').textContent = `عدد الطلبات: ${list.length} — تم شراؤها: ${bought} — بانتظار الشراء: ${waiting}`;
+            let rejected = 0, pending = 0;
+            list.forEach(r => { if (r.status === 'REJECTED') rejected++; else if (r.status === 'PENDING_APPROVAL') pending++; else if (r.status === 'PO_CONFIRMED') bought++; else if ((parseFloat(r.purchase_qty_needed) || 0) > 0) waiting++; });
+            document.getElementById('histSummary').textContent = `عدد الطلبات: ${list.length} — تم شراؤها: ${bought} — بانتظار الشراء: ${waiting} — مرفوضة: ${rejected} — بانتظار التأكيد: ${pending}`;
 
             if (!list.length) { tbody.innerHTML = '<tr><td colspan="12">لا توجد طلبات في السجل.</td></tr>'; return; }
             tbody.innerHTML = list.map(r => {
@@ -259,7 +307,9 @@
                 const done = r.status === 'PO_CONFIRMED';
                 const boughtQty = done ? needed : 0;
                 let st = '<span class="status-fulfilled">مُصرف بالكامل من المخزن ✅</span>';
-                if (done) st = '<span class="status-fulfilled">تم الشراء والتوريد ✅</span>';
+                if (r.status === 'PENDING_APPROVAL') st = '<span class="status-partial">بانتظار التأكيد ⏳</span>';
+                else if (r.status === 'REJECTED') st = '<span style="color:#ef4444; font-weight:bold;">مرفوضة ❌</span>';
+                else if (done) st = '<span class="status-fulfilled">تم الشراء والتوريد ✅</span>';
                 else if (needed > 0) st = '<span class="status-partial">بانتظار الشراء ⏳</span>';
                 const img = String(r.image).startsWith('http') ? `<a href="${escH(r.image)}" target="_blank" style="color:#38bdf8">عرض</a>` : '-';
                 return `<tr>
@@ -296,10 +346,12 @@
                 const data = await res.json();
                 
                 if (data.error) {
+                    try { sessionStorage.removeItem('adminPass'); } catch (e) {}
                     errorMsg.innerText = "❌ " + data.error;
                     errorMsg.style.display = 'block';
                 } else {
-                    activeToken = passInput; 
+                    activeToken = passInput;
+                    try { sessionStorage.setItem('adminPass', passInput); } catch (e) {}
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('admin-content').style.display = 'block';
                     
@@ -307,6 +359,7 @@
                     renderPurchaseTable(); 
                     
                     await loadInventoryData();
+                    syncHistory().then(loadHistory);
                 }
             } catch (error) {
                 errorMsg.innerText = '⚠️ حدث خطأ في الاتصال بالسيرفر.';
@@ -516,22 +569,26 @@
                 let needed = row.purchase_qty_needed || 0;
                 let dateDisplay = (row.date && row.date !== "1969-12-31" && row.date !== "undefined") ? row.date : "غير محدد";
 
-                if (row.status === 'PO_CONFIRMED') { statusClass = 'status-fulfilled'; statusText = 'تم الشراء والتوريد ✅'; }
+                if (row.status === 'PENDING_APPROVAL') { statusClass = 'status-partial'; statusText = 'بانتظار التأكيد ⏳'; }
+                else if (row.status === 'PO_CONFIRMED') { statusClass = 'status-fulfilled'; statusText = 'تم الشراء والتوريد ✅'; }
                 else if (needed > 0) { statusClass = 'status-partial'; statusText = 'صُرف المتاح + مطلوب شراء'; }
                 else { statusClass = 'status-fulfilled'; statusText = 'مُصرف بالكامل من المخزن ✅'; }
 
-                let actionHtml = (needed > 0 && row.status !== 'PO_CONFIRMED') ? `<button class="btn-confirm" onclick="confirmPurchaseOrder(${row.row}, this)">تأكيد الشراء 📦</button>` : `-`;
+                const isPending = row.status === 'PENDING_APPROVAL', isDone = row.status === 'PO_CONFIRMED';
+                const prop = isPending ? ' <small style="color:#94a3b8">(مقترح)</small>' : '';
+                let actionHtml = isPending ? `<button class="btn-confirm" onclick="approveRequest(${row.row}, this)">تأكيد الصرف ✅</button>`
+                    : (needed > 0 && !isDone) ? `<button class="btn-confirm" onclick="confirmPurchaseOrder(${row.row}, this)">تأكيد الشراء 📦</button>` : `-`;
 
                 tbody.innerHTML += `<tr>
                     <td><span class="cat-badge">${cat}</span></td>
                     <td style="color:#38bdf8; font-weight:bold;">${reqName}</td>
                     <td style="font-weight:bold;">${item}</td>
                     <td>${reqQty} ${unit}</td>
-                    <td>${fulfilled} ${unit}</td>
-                    <td style="font-weight: bold; color: ${needed > 0 ? '#ef4444' : '#f8fafc'};">${needed > 0 ? needed + ' ' + unit : '0'}</td>
+                    <td>${fulfilled} ${unit}${prop}</td>
+                    <td style="font-weight: bold; color: ${needed > 0 ? '#ef4444' : '#f8fafc'};">${needed > 0 ? needed + ' ' + unit : '0'}${prop}</td>
                     <td>${dateDisplay}</td>
                     <td class="${statusClass}">${statusText}</td>
-                    <td>${actionHtml} <button class="btn-delete" style="margin-top: 5px;" onclick="deletePurchaseRecord(${row.row}, this)">مسح 🗑️</button></td>
+                    <td>${actionHtml} ${isDone ? '' : `<button class="btn-delete" style="margin-top: 5px;" onclick="deletePurchaseRecord(${row.row}, this)">رفض العملية ❌</button>`}</td>
                 </tr>`;
             });
         }
@@ -541,7 +598,8 @@
                 const res = await fetch(purchaseURL + "?pass=" + encodeURIComponent(activeToken));
                 const data = await res.json();
                 purchaseDataGlobal = Array.isArray(data) ? data.reverse() : [];
-                renderPurchaseTable(); 
+                renderPurchaseTable();
+                syncHistory().then(loadHistory);
             } catch (error) { console.error(error); }
         }
 
@@ -576,8 +634,7 @@
 
                 if (errMsg(result)) { alert("⚠️ " + errMsg(result)); return; }
 
-                if (result.needed > 0) alert(`✅ تم صرف المتاح (${result.fulfilled}) وتوليد طلب بالنواقص (${result.needed})!`);
-                else alert(`✅ تم صرف كامل الكمية (${result.fulfilled}) من المخزون بنجاح!`);
+                alert(`✅ تم تسجيل الطلب وهو بانتظار التأكيد (المتاح ${result.fulfilled} — الناقص ${result.needed}). لم يتم خصم أي شيء من المخزن لحد ما تأكد الصرف.`);
                 if (result.foundInStock === false) alert('ℹ️ الصنف مش موجود في المخزن بنفس الاسم/القسم، فاتحسب كله مطلوب شراء.');
 
                 document.getElementById('purchaseForm').reset();
@@ -597,14 +654,38 @@
             } catch (e) { alert('⚠️ حدث خطأ!'); btn.innerText = originalText; btn.disabled = false; }
         }
 
-        async function deletePurchaseRecord(rowNum, btn) {
-            if(!confirm('⚠️ هل أنت متأكد من مسح الطلب؟')) return;
+        async function approveRequest(rowNum, btn) {
+            if (!confirm('✅ تأكيد الصرف؟ هيتخصم المتاح من المخزن دلوقتي.')) return;
             let originalText = btn.innerText; btn.innerText = '⏳'; btn.disabled = true;
             try {
-                await fetch(purchaseURL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowNum, pass: activeToken }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
-                alert('✅ تم المسح.'); await reloadPurchaseData(); 
+                const r = await (await fetch(purchaseURL, { method: 'POST', body: JSON.stringify({ action: 'approve', row: rowNum, pass: activeToken }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })).json();
+                if (errMsg(r)) { alert('⚠️ ' + errMsg(r)); btn.innerText = originalText; btn.disabled = false; return; }
+                alert(r.needed > 0 ? `✅ تم صرف ${r.fulfilled} من المخزن، والناقص ${r.needed} مطلوب شراؤه.` : `✅ تم صرف كامل الكمية (${r.fulfilled}) من المخزن.`);
+                await reloadPurchaseData(); await loadInventoryData();
+            } catch (e) { alert('⚠️ حدث خطأ!'); btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        async function deletePurchaseRecord(rowNum, btn) {
+            if(!confirm('⚠️ هل أنت متأكد من رفض العملية؟ (هتتشال من جدول المتابعة وتفضل في السجل بحالة مرفوضة)')) return;
+            let originalText = btn.innerText; btn.innerText = '⏳'; btn.disabled = true;
+            try {
+                if (historyURL) {
+                    try {
+                        const fresh = await fetchPurchases();
+                        const target = fresh.find(r => r.row === rowNum);
+                        if (target && target.status !== 'PO_CONFIRMED') target.status = 'REJECTED';
+                        await syncHistory(fresh);
+                    } catch (e) { console.warn(e); }
+                }
+                const rj = await (await fetch(purchaseURL, { method: 'POST', body: JSON.stringify({ action: 'reject', row: rowNum, pass: activeToken }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })).json();
+                if (errMsg(rj)) { alert('⚠️ ' + errMsg(rj)); btn.innerText = originalText; btn.disabled = false; await reloadPurchaseData(); return; }
+                alert('✅ تم رفض العملية.'); await reloadPurchaseData(); await loadInventoryData();
             } catch (e) { alert('⚠️ حدث خطأ.'); btn.innerText = originalText; btn.disabled = false; }
         }
+    
+        (async () => {
+            try { const p = sessionStorage.getItem('adminPass'); if (p) { document.getElementById('adminPass').value = p; await checkPassword(); } } catch (e) {}
+        })();
     </script>
 </body>
 </html>
