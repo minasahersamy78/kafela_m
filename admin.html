@@ -3,151 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>إدارة المخزن (أدمن)</title>
+    <title>لوحة التحكم الشاملة - مخزن القافلة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #10b981; padding: 15px; max-width: 1000px; margin: auto; box-sizing: border-box; }
-        .header { text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1); border-radius: 15px; margin-bottom: 25px; border: 1px solid #10b981; }
-        .header h1 { margin: 0; font-size: 2.2em; text-shadow: 0 0 10px #10b981; }
-        
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 50px; background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; max-width: 400px; margin: auto; }
-        #login-error { color: #ef4444; display: none; margin-top: 10px; font-weight: bold;}
-
+        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px; max-width: 1100px; margin: auto; box-sizing: border-box; }
+        .header { text-align: center; padding: 35px 20px; background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border-radius: 20px; margin-bottom: 30px; border: 2px solid #1e40af; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15); position: relative; }
+        .logo-container { width: 140px; height: 140px; background-color: #ffffff; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(37, 99, 235, 0.5), 0 0 10px rgba(16, 185, 129, 0.4); border: 4px solid #3b82f6; overflow: hidden; }
+        .logo-container img { width: 90%; height: 90%; object-fit: contain; }
+        .header h1 { margin: 5px 0 0; font-size: 2.2em; color: #3b82f6; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 50px; background: #1e293b; padding: 40px; border-radius: 20px; border: 1px solid #334155; max-width: 400px; margin-left: auto; margin-right: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        #login-error { color: #ef4444; display: none; margin-top: 15px; font-weight: bold; font-size: 1.1em;}
         #admin-content { display: none; }
-
-        .controls { background: #1e293b; padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 1px solid #334155; box-shadow: 0 0 15px rgba(0,0,0,0.5); width: 100%; box-sizing: border-box; }
-        .controls h3 { margin-top: 0; color: #10b981; font-size: 1.3em; }
-        label { font-weight: 600; color: #34d399; margin-bottom: 5px; display: block; font-size: 0.95em; }
-        
-        select, input { 
-            width: 100%; display: block; padding: 12px; border: 2px solid #334155; 
-            border-radius: 10px; background-color: #0f172a; color: #34d399; 
-            font-family: 'Cairo', sans-serif; font-size: 16px; box-sizing: border-box; 
-            -webkit-appearance: none; appearance: none;
-        }
-        select:focus, input:focus { border-color: #10b981; outline: none; }
-        
-        .grid { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; width: 100%; }
-        @media (min-width: 768px) { .grid { display: grid; grid-template-columns: 1fr 1fr; } }
-
-        .btn-group { display: flex; gap: 15px; margin-top: 20px; }
-        button { font-family: 'Cairo'; cursor: pointer; padding: 15px; font-size: 17px; font-weight: bold; border: none; border-radius: 10px; flex: 1; transition: 0.3s;}
-        .btn-add { background: #10b981; color: #000; }
-        .btn-delete { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
-        .btn-new { background: #3b82f6; color: #fff; margin-top: 15px; }
-        
-        .btn-row-delete { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; font-size: 13px; width: auto; }
-        .btn-row-delete:hover { background: #dc2626; }
-
-        .filter-container { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
-        .table-container { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 10px; overflow: hidden; font-size: 0.9em; }
-        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #334155; white-space: nowrap; }
-        th { background: #0f172a; color: #10b981; }
-        .cat-badge { background: #0f172a; padding: 4px 8px; border-radius: 6px; font-size: 0.85em; border: 1px solid #334155; color: #94a3b8; }
+        .section-header { background: linear-gradient(90deg, #1e40af, #0f172a); color: white; padding: 15px 20px; border-radius: 12px; margin: 40px 0 20px; font-size: 1.5em; border-right: 5px solid #38bdf8; box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
+        .form-container { background: #1e293b; padding: 25px; border-radius: 20px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 25px; width: 100%; box-sizing: border-box;}
+        .form-container h3 { margin-top: 0; color: #38bdf8; font-size: 1.3em; font-weight: 700; margin-bottom: 20px; }
+        .grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; width: 100%; }
+        .grid > div { width: 100%; box-sizing: border-box; }
+        @media (min-width: 768px) { .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } }
+        label { font-weight: 600; color: #38bdf8; margin-bottom: 8px; display: block; font-size: 1.05em; }
+        select, input { width: 100%; display: block; padding: 12px 15px; border: 2px solid #334155; border-radius: 12px; background-color: #0f172a; color: #f8fafc; font-family: 'Cairo', sans-serif; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; appearance: none; transition: all 0.3s ease; }
+        select:focus, input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        .btn-group { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;}
+        button { flex: 1; padding: 15px; font-family: 'Cairo'; font-size: 18px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-sizing: border-box; }
+        button:active { transform: scale(0.98); }
+        .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #10b981 100%); color: #ffffff; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+        .btn-primary:hover { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        .btn-add { background: #10b981; color: #fff; }
+        .btn-sub { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
+        .filter-container { background: #1e293b; padding: 20px; border-radius: 15px; border: 1px solid #334155; display: flex; align-items: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;}
+        .table-container { overflow-x: auto; width: 100%; border-radius: 12px; border: 1px solid #334155; margin-bottom: 40px;}
+        table { width: 100%; border-collapse: collapse; background: #1e293b; overflow: hidden; font-size: 0.95em; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #334155; white-space: nowrap; }
+        th { background: #0f172a; color: #38bdf8; font-weight: 700; font-size: 1.05em; }
+        tbody tr:hover { background: rgba(51, 65, 85, 0.4); }
+        .img-preview { max-width: 50px; max-height: 50px; border-radius: 6px; border: 1px solid #3b82f6; }
+        .btn-delete { background: #ef4444; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; transition: 0.2s;}
+        .btn-delete:hover { background: #dc2626; }
+        .btn-confirm { background: #10b981; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; margin-left: 5px; transition: 0.2s; }
+        .btn-confirm:hover { background: #059669; }
+        .cat-badge { background: #0f172a; padding: 4px 10px; border-radius: 8px; font-size: 0.9em; border: 1px solid #334155; color: #f8fafc; }
+        .status-fulfilled { color: #10b981; font-weight: bold; }
+        .status-partial { color: #f59e0b; font-weight: bold; }
+        .status-po { color: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>🛡️ إدارة المخزن (أدمن)</h1>
+        <div class="logo-container"><img src="logo.jpg" alt="شعار القافلة" onerror="this.style.display='none';"></div>
+        <h1>🛡️ لوحة التحكم الشاملة - مخزن القافلة</h1>
+        <p style="color: #94a3b8; font-weight: bold;">إدارة المخزون والطلبات والمشتريات</p>
     </div>
 
-    <!-- شاشة تسجيل الدخول -->
     <div id="login-screen">
-        <label style="color:#34d399; font-size:1.2em; margin-bottom:15px;">أدخل كلمة المرور:</label>
+        <label style="color:#38bdf8; font-size:1.2em; margin-bottom:15px; font-weight: bold;">أدخل كلمة المرور:</label>
         <input type="password" id="adminPass" placeholder="كلمة المرور..." onkeypress="if(event.key === 'Enter') checkPassword()">
-        <button id="loginBtn" onclick="checkPassword()" style="margin-top:15px;">تسجيل الدخول</button>
+        <button id="loginBtn" onclick="checkPassword()" style="margin-top: 15px;" class="btn-primary">تسجيل الدخول</button>
         <div id="login-error">❌ كلمة المرور غير صحيحة</div>
     </div>
 
     <div id="admin-content">
-        <!-- 1. تسجيل حركة وارد/منصرف -->
-        <div class="controls">
-            <h3>🔄 تسجيل حركة وارد / منصرف</h3>
-            <div style="margin-top: 15px;">
-                <label>🔍 اختر الصنف:</label>
-                <select id="itemSelect">
-                    <option value="">⏳ جاري التحميل...</option>
-                </select>
+        <!-- ================= القسم الأول: إدارة المخزون ================= -->
+        <div class="section-header">📦 أولاً: إدارة رصيد المخزون</div>
+
+        <div class="form-container">
+            <h3>🔄 تسجيل حركة (وارد / منصرف) سريعة</h3>
+            <div class="grid">
+                <div>
+                    <label>🔍 اختر الصنف الموجود مسبقاً:</label>
+                    <select id="itemSelect"><option value="">⏳ جاري التحميل...</option></select>
+                </div>
+                <div>
+                    <label>🔢 الكمية المراد إضافتها أو صرفها:</label>
+                    <input type="number" id="amountInput" value="1" min="0.1" step="0.1">
+                </div>
             </div>
-            
-            <div style="margin-top: 15px;">
-                <label>🔢 الكمية المراد إضافتها أو صرفها:</label>
-                <input type="number" id="amountInput" value="1" min="0.1" step="0.1">
-            </div>
-            
             <div class="btn-group">
-                <button onclick="updateInventory('add')" class="btn-add" id="addBtn">📥 إضافة (وارد)</button>
-                <button onclick="updateInventory('subtract')" class="btn-delete" id="subBtn">📤 سحب (منصرف)</button>
+                <button onclick="updateInventoryQty('add')" class="btn-add" id="addBtn">📥 إضافة (وارد للمخزن)</button>
+                <button onclick="updateInventoryQty('subtract')" class="btn-sub" id="subBtn">📤 سحب (منصرف من المخزن)</button>
             </div>
         </div>
 
-        <!-- 2. إضافة صنف جديد كلياً للمخزن -->
-        <div class="controls">
-            <h3>➕ إضافة منتج جديد كلياً للمخزن</h3>
+        <div class="form-container">
+            <h3>➕ تعريف صنف جديد كلياً في المخزن</h3>
             <div class="grid">
                 <div>
                     <label>القسم / الشيت:</label>
-                    <input type="text" id="newCategory" placeholder="مثال: أكل، ألعاب، بلاستيكات...">
+                    <input type="text" id="newCategory" list="catDatalist" placeholder="اختر قسم موجود أو اكتب قسماً جديداً..." required>
+                    <datalist id="catDatalist"></datalist>
                 </div>
                 <div>
-                    <label>اسم المنتج الجديد:</label>
-                    <input type="text" id="newItemName" placeholder="اسم المنتج...">
+                    <label>اسم الصنف الجديد:</label>
+                    <input type="text" id="newItemName" placeholder="اسم المنتج..." required>
                 </div>
                 <div>
-                    <label>الكمية الأولية:</label>
-                    <input type="number" id="newItemQty" value="1" min="0">
+                    <label>الكمية الأولية المتوفرة:</label>
+                    <input type="number" id="newInitialQty" value="1" min="0" step="0.1">
                 </div>
                 <div>
                     <label>الوحدة:</label>
-                    <select id="newItemUnit">
+                    <select id="newUnit">
                         <option value="قطعه">قطعه</option>
                         <option value="كيلو">كيلو</option>
                         <option value="لتر">لتر</option>
                         <option value="كيس">كيس</option>
                         <option value="علبة">علبة</option>
+                        <option value="لفة">لفة</option>
                     </select>
                 </div>
             </div>
-            <button onclick="addNewProduct()" class="btn-new" id="newProdBtn">✨ إضافة المنتج للمخزن</button>
+            <button onclick="addNewProduct()" class="btn-primary" id="newProdBtn" style="margin-top: 15px;">✨ حفظ الصنف في المخزن</button>
         </div>
 
-        <!-- فلتر وتصفية الجدول -->
+        <div class="form-container" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+            <h3>🔍 جدول المخزون الحالي</h3>
+            <div class="filter-container">
+                <div style="flex: 1;"><label>ابحث باسم الصنف:</label><input type="text" id="invSearchInput" placeholder="اكتب للبحث..." oninput="filterInventoryTable()"></div>
+                <div style="flex: 1;"><label>تصفية بحسب القسم:</label><select id="invCategoryFilter" onchange="filterInventoryTable()"><option value="الكل">عرض كل الأقسام</option></select></div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>القسم</th><th>اسم الصنف</th><th>الكمية المُعرفة</th><th>الوحدة</th><th>المنصرف</th><th>المتبقي الحالي</th><th>إجراءات المخزن</th></tr>
+                    </thead>
+                    <tbody id="invTableBody"><tr><td colspan="7">⏳ جاري تحميل بيانات المخزن...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= القسم الثاني: إدارة المشتريات والطلبات ================= -->
+        <div class="section-header">🛒 ثانياً: إدارة المشتريات والطلبات</div>
+
+        <div class="form-container">
+            <h3>➕ تسجيل طلب جديد لسحب من المخزن أو شراء (للأدمن)</h3>
+            <form id="purchaseForm" onsubmit="submitAdminPurchase(event)">
+                <div class="grid">
+                    <div>
+                        <label>المشتريات (اسم المنتج):</label>
+                        <input type="text" id="adminItem" list="itemDatalist" placeholder="اكتب اسم المنتج..." required oninput="autoFillItemDetails()">
+                        <datalist id="itemDatalist"></datalist>
+                    </div>
+                    <div>
+                        <label>القسم (سيُملأ تلقائياً):</label>
+                        <select id="adminCat" required>
+                            <option value="" disabled selected>⏳ جاري التحميل...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>الكميه المطلوبة:</label>
+                        <input type="number" id="adminQty" min="0.1" step="0.1" required>
+                    </div>
+                    <div>
+                        <label>الوحده (ستُملأ تلقائياً):</label>
+                        <select id="adminUnit" required>
+                            <option value="" disabled selected>اختر الوحدة...</option>
+                            <option value="قطعه">قطعه</option>
+                            <option value="كيلو">كيلو</option>
+                            <option value="لتر">لتر</option>
+                            <option value="كيس">كيس</option>
+                            <option value="علبة">علبة</option>
+                            <option value="لفة">لفة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>اسم الطالب (الخادم/الأدمن):</label>
+                        <input type="text" id="adminRequester" placeholder="اسم الخادم..." required>
+                    </div>
+                    <div>
+                        <label>رقم التواصل:</label>
+                        <input type="tel" id="adminContact" placeholder="رقم الموبايل..." required>
+                    </div>
+                    <div>
+                        <label>تاريخ الطلب:</label>
+                        <input type="date" id="adminDate" required>
+                    </div>
+                    <div>
+                        <label>صورة المنتج (اختياري):</label>
+                        <input type="file" id="adminImage" accept="image/*">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" id="adminSubmitBtn" style="margin-top: 15px;">إرسال ومعالجة الطلب</button>
+            </form>
+        </div>
+
+        <div class="form-container" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+            <h3>📋 سجل طلبات الخدام ونواقص المشتريات</h3>
+            <div class="filter-container">
+                <label style="width: 100%;">🔍 عرض الطلبات لقسم:</label>
+                <select id="filterCategory" onchange="renderPurchaseTable()"><option value="الكل">عرض كل الأقسام</option></select>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>القسم</th><th>الطالب</th><th>المنتج</th><th>الكمية المطلوبة</th><th>صُرف من المخزن</th><th>مطلوب شراؤه 🛒</th><th>التاريخ</th><th>الحالة</th><th>إجراءات التوريد</th></tr>
+                    </thead>
+                    <tbody id="purchaseTableBody"><tr><td colspan="9">⏳ جاري تحميل البيانات...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= القسم الثالث: سجل الطلبات (History) ================= -->
+        <div class="section-header">🗂️ ثالثاً: سجل الطلبات الكامل</div>
         <div class="filter-container">
-            <label>🔍 فلترة الجدول لقسم:</label>
-            <select id="filterCategory" onchange="renderTable()">
-                <option value="الكل">عرض كل الأقسام</option>
-            </select>
+            <div style="flex: 2; min-width: 200px;"><label>ابحث (الطالب / المنتج / الرقم):</label><input type="text" id="histSearch" placeholder="اكتب للبحث..." oninput="renderHistory()"></div>
+            <div style="flex: 1; min-width: 160px;"><label>القسم:</label><select id="histCategory" onchange="renderHistory()"><option value="الكل">كل الأقسام</option></select></div>
         </div>
-
-        <!-- جدول المخزون -->
+        <div id="histSummary" style="margin: 0 0 12px; color: #94a3b8; font-weight: 600;"></div>
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>القسم</th>
-                        <th>اسم الصنف</th>
-                        <th>الكمية</th>
-                        <th>الوحدة</th>
-                        <th>المنصرف</th>
-                        <th>المتبقي</th>
-                        <th>إجراءات</th>
-                    </tr>
+                    <tr><th>التاريخ</th><th>الطالب</th><th>رقم التواصل</th><th>القسم</th><th>المنتج</th><th>الوحدة</th><th>الكمية المطلوبة</th><th>الموجود بالمخزن (المصروف)</th><th>المطلوب شراؤه</th><th>الكمية التي تم شراؤها</th><th>الحالة</th><th>الصورة</th></tr>
                 </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="7" style="padding:40px; color:#10b981;">⏳ جاري سحب بيانات المخزن...</td></tr>
-                </tbody>
+                <tbody id="historyTableBody"><tr><td colspan="12">⏳ جاري تحميل السجل...</td></tr></tbody>
             </table>
         </div>
+
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbx4ImcGwwmECRZa6HjKtbYMruh9E4fidWCh-V-FgTqwup0uyDZrUoqNRl3oJSgjeQovVA/exec';
+        const purchaseURL = 'https://script.google.com/macros/s/AKfycbwCK4XV9V3yhqzgeRi9-v6kvP_jN9ypgtXQc7uh3c3-CU-MfkhwI__cr0JyFAjB8OSS6Q/exec'; // رابط المشتريات الجديد
+        const inventoryURL = 'https://script.google.com/macros/s/AKfycbzMZ-4vIawAyFXmcBHsxUauSXIBLD7w27UoFUFuoR0U21nolJgbEAwLNWyAPwPcdAeG0w/exec'; // رابط المخزن الجديد
         
-        let globalData = [];
-        let categories = new Set();
-        let activeToken = '';
+        let purchaseDataGlobal = []; 
+        let inventoryDataGlobal = [];
+        let activeToken = ''; 
+
+        async function inventoryPost(obj) {
+            const r = await fetch(inventoryURL, { method: 'POST', body: JSON.stringify(obj), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+            return r.json();
+        }
+
+        const escH = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        function renderHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            const sel = document.getElementById('histCategory');
+            const q = document.getElementById('histSearch').value.trim().toLowerCase();
+
+            const cur = sel.value;
+            const cats = [...new Set(purchaseDataGlobal.map(r => r.category).filter(Boolean))];
+            sel.innerHTML = '<option value="الكل">كل الأقسام</option>' + cats.map(c => `<option value="${escH(c)}">${escH(c)}</option>`).join('');
+            sel.value = cats.includes(cur) ? cur : 'الكل';
+
+            const list = purchaseDataGlobal.filter(r =>
+                (sel.value === 'الكل' || r.category === sel.value) &&
+                (!q || `${r.requesterName} ${r.item} ${r.contactNumber}`.toLowerCase().includes(q)));
+
+            let bought = 0, waiting = 0;
+            list.forEach(r => { if (r.status === 'PO_CONFIRMED') bought++; else if ((parseFloat(r.purchase_qty_needed) || 0) > 0) waiting++; });
+            document.getElementById('histSummary').textContent = `عدد الطلبات: ${list.length} — تم شراؤها: ${bought} — بانتظار الشراء: ${waiting}`;
+
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="12">لا توجد طلبات في السجل.</td></tr>'; return; }
+            tbody.innerHTML = list.map(r => {
+                const needed = parseFloat(r.purchase_qty_needed) || 0;
+                const done = r.status === 'PO_CONFIRMED';
+                const boughtQty = done ? needed : 0;
+                let st = '<span class="status-fulfilled">مُصرف بالكامل من المخزن ✅</span>';
+                if (done) st = '<span class="status-fulfilled">تم الشراء والتوريد ✅</span>';
+                else if (needed > 0) st = '<span class="status-partial">بانتظار الشراء ⏳</span>';
+                const img = String(r.image).startsWith('http') ? `<a href="${escH(r.image)}" target="_blank" style="color:#38bdf8">عرض</a>` : '-';
+                return `<tr>
+                    <td>${escH(r.date)}</td>
+                    <td style="color:#38bdf8; font-weight:bold;">${escH(r.requesterName)}</td>
+                    <td>${escH(r.contactNumber)}</td>
+                    <td><span class="cat-badge">${escH(r.category)}</span></td>
+                    <td style="font-weight:bold;">${escH(r.item)}</td>
+                    <td>${escH(r.unit)}</td>
+                    <td>${escH(r.requested_qty)}</td>
+                    <td>${escH(r.fulfilled_from_stock)}</td>
+                    <td style="color:${needed > 0 ? '#f59e0b' : '#f8fafc'}; font-weight:bold;">${needed}</td>
+                    <td style="color:#10b981; font-weight:bold;">${boughtQty}</td>
+                    <td>${st}</td>
+                    <td>${img}</td></tr>`;
+            }).join('');
+        }
+
+        function errMsg(r) { return r && (r.error || (r.status === 'error' ? (r.message || 'خطأ في السيرفر') : '')); }
+
+        document.getElementById('adminDate').valueAsDate = new Date();
 
         async function checkPassword() {
             const passInput = document.getElementById('adminPass').value;
@@ -159,7 +292,7 @@
             errorMsg.style.display = 'none';
 
             try {
-                const res = await fetch(scriptURL + "?action=verifyPass&pass=" + encodeURIComponent(passInput));
+                const res = await fetch(purchaseURL + "?pass=" + encodeURIComponent(passInput));
                 const data = await res.json();
                 
                 if (data.error) {
@@ -169,7 +302,11 @@
                     activeToken = passInput; 
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('admin-content').style.display = 'block';
-                    loadData(); 
+                    
+                    purchaseDataGlobal = Array.isArray(data) ? data.reverse() : [];
+                    renderPurchaseTable(); 
+                    
+                    await loadInventoryData();
                 }
             } catch (error) {
                 errorMsg.innerText = '⚠️ حدث خطأ في الاتصال بالسيرفر.';
@@ -180,29 +317,42 @@
             }
         }
 
-        async function loadData() {
+        async function loadInventoryData() {
             try {
-                const response = await fetch(scriptURL);
-                const data = await response.json();
-                globalData = data;
-                
-                const tbody = document.getElementById('tableBody');
-                const select = document.getElementById('itemSelect');
-                const filterSelect = document.getElementById('filterCategory');
-                
-                select.innerHTML = '<option value="" disabled selected>-- اختر الصنف --</option>';
-                filterSelect.innerHTML = '<option value="الكل">عرض كل الأقسام</option>';
-                categories.clear();
+                const res = await fetch(inventoryURL);
+                inventoryDataGlobal = await res.json();
 
-                const groupedData = data.reduce((acc, item) => {
-                    acc[item.sheet] = acc[item.sheet] || [];
-                    acc[item.sheet].push(item);
-                    categories.add(item.sheet);
-                    return acc;
-                }, {});
+                const invCategoryFilter = document.getElementById('invCategoryFilter');
+                const filterCategory = document.getElementById('filterCategory');
+                const adminCat = document.getElementById('adminCat');
+                const itemSelect = document.getElementById('itemSelect'); 
+                const catDatalist = document.getElementById('catDatalist');
+                const itemDatalist = document.getElementById('itemDatalist'); 
+                
+                invCategoryFilter.innerHTML = '<option value="الكل">عرض كل الأقسام</option>';
+                filterCategory.innerHTML = '<option value="الكل">عرض كل الأقسام</option>';
+                adminCat.innerHTML = '<option value="" disabled selected>-- اختر القسم --</option>';
+                itemSelect.innerHTML = '<option value="" disabled selected>-- اختر الصنف --</option>';
+                catDatalist.innerHTML = '';
+                itemDatalist.innerHTML = '';
+                
+                const categories = new Set();
+                const groupedData = {};
+
+                inventoryDataGlobal.forEach(item => {
+                    if (item.sheet) {
+                        categories.add(item.sheet);
+                        groupedData[item.sheet] = groupedData[item.sheet] || [];
+                        groupedData[item.sheet].push(item);
+                        itemDatalist.innerHTML += `<option value="${item.item}">`;
+                    }
+                });
 
                 categories.forEach(cat => {
-                    filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    invCategoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    filterCategory.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    adminCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    catDatalist.innerHTML += `<option value="${cat}">`; 
                 });
 
                 for (let sheetName in groupedData) {
@@ -214,94 +364,73 @@
                         option.textContent = `${item.item} (${item.unit})`;
                         optGroup.appendChild(option);
                     });
-                    select.appendChild(optGroup);
+                    itemSelect.appendChild(optGroup);
                 }
 
-                renderTable();
-            } catch (error) {
-                console.error(error);
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="color: #ef4444;">⚠️ حدث خطأ في الاتصال.</td></tr>';
+                filterInventoryTable();
+            } catch (e) {
+                console.error(e);
             }
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            const filterValue = document.getElementById('filterCategory').value;
+        function autoFillItemDetails() {
+            const typedItem = document.getElementById('adminItem').value.trim().toLowerCase();
+            const catSelect = document.getElementById('adminCat');
+            const unitSelect = document.getElementById('adminUnit');
+            
+            const foundItem = inventoryDataGlobal.find(i => i.item && i.item.toLowerCase() === typedItem);
+            
+            if (foundItem) {
+                catSelect.value = foundItem.sheet;
+                unitSelect.value = foundItem.unit;
+            }
+        }
+
+        function filterInventoryTable() {
+            const tbody = document.getElementById('invTableBody');
+            const searchText = document.getElementById('invSearchInput').value.trim().toLowerCase();
+            const catFilter = document.getElementById('invCategoryFilter').value;
+
             tbody.innerHTML = '';
 
-            let filteredData = globalData;
-            if (filterValue !== 'الكل') {
-                filteredData = globalData.filter(item => item.sheet === filterValue);
-            }
+            let filtered = inventoryDataGlobal.filter(item => {
+                const matchesSearch = item.item ? item.item.toLowerCase().includes(searchText) : false;
+                const matchesCat = (catFilter === 'الكل' || item.sheet === catFilter);
+                return matchesSearch && matchesCat;
+            });
 
-            if (filteredData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">لا توجد أصناف.</td></tr>';
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7">لا توجد أصناف تطابق البحث.</td></tr>';
                 return;
             }
 
-            filteredData.forEach(item => {
-                let isWarning = item.remaining <= 0 ? 'color: #ef4444; font-weight: bold;' : '';
-                
-                // تنظيف الاسم للشيت والصنف لمنع مشاكل العبارات النصية في الدالة
+            filtered.forEach(item => {
+                let isWarning = item.remaining <= 0 ? 'color: #ef4444; font-weight: bold;' : 'color: #10b981; font-weight: bold;';
                 let cleanSheet = item.sheet.replace(/'/g, "\\'");
                 let cleanItem = item.item.replace(/'/g, "\\'");
 
                 tbody.innerHTML += `
                     <tr>
                         <td><span class="cat-badge">${item.sheet}</span></td>
-                        <td style="font-weight: 600;">${item.item}</td>
+                        <td style="font-weight: 700; color: #f8fafc;">${item.item}</td>
                         <td>${item.quantity}</td>
                         <td>${item.unit}</td>
                         <td style="color: #ef4444;">${item.issued}</td>
-                        <td style="font-size: 1.1em; ${isWarning}">${item.remaining}</td>
+                        <td style="font-size: 1.15em; ${isWarning}">${item.remaining}</td>
                         <td>
-                            <button class="btn-row-delete" onclick="deleteProduct('${cleanSheet}', '${cleanItem}', this)">مسح 🗑️</button>
+                            <button class="btn-delete" onclick="deleteProduct('${cleanSheet}', '${cleanItem}', this)">مسح 🗑️</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        async function deleteProduct(sheet, item, btn) {
-            if (!confirm(`⚠️ هل أنت متأكد من مسح المنتج "${item}" بالكامل من قسم "${sheet}"؟`)) return;
-
-            let originalText = btn.innerText;
-            btn.innerText = "⏳";
-            btn.disabled = true;
-
-            let formData = new FormData();
-            formData.append('action', 'deleteProduct');
-            formData.append('sheet', sheet);
-            formData.append('item', item);
-            formData.append('pass', activeToken);
-
-            try {
-                const response = await fetch(scriptURL, { method: 'POST', body: formData });
-                const result = await response.json();
-
-                if (result.error) {
-                    alert("⚠️ " + result.error);
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                } else {
-                    alert(`✅ تم مسح المنتج "${item}" بنجاح!`);
-                    await loadData();
-                }
-            } catch (error) {
-                alert("⚠️ حدث خطأ أثناء المسح!");
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        async function updateInventory(action) {
+        async function updateInventoryQty(action) {
             const selectVal = document.getElementById('itemSelect').value;
             if (!selectVal) return alert("يرجى اختيار الصنف أولاً!");
-
             const [sheet, item] = selectVal.split('|');
             let amount = parseFloat(document.getElementById('amountInput').value) || 0;
-            
-            if (amount <= 0) return alert("يرجى إدخال كمية صحيحة أكبر من صفر!");
+            if (amount <= 0) return alert("يرجى إدخال كمية صحيحة!");
 
             document.getElementById('addBtn').disabled = true;
             document.getElementById('subBtn').disabled = true;
@@ -314,65 +443,167 @@
             formData.append('pass', activeToken); 
 
             try {
-                const response = await fetch(scriptURL, { method: 'POST', body: formData });
-                const result = await response.json();
-
-                if(result.error) {
-                    alert("⚠️ " + result.error);
-                } else {
+                const result = await inventoryPost(Object.fromEntries(formData));
+                if(errMsg(result)) alert("⚠️ " + errMsg(result));
+                else {
                     document.getElementById('amountInput').value = 1;
-                    await loadData();
+                    await loadInventoryData();
                     alert(`✅ تمت العملية بنجاح لصنف: ${item}`);
                 }
-            } catch (error) {
-                alert("⚠️ حدث خطأ أثناء التحديث!");
-            } finally {
-                document.getElementById('addBtn').disabled = false;
-                document.getElementById('subBtn').disabled = false;
-            }
+            } catch (error) { alert("⚠️ حدث خطأ!"); } 
+            finally { document.getElementById('addBtn').disabled = false; document.getElementById('subBtn').disabled = false; }
         }
 
         async function addNewProduct() {
             const category = document.getElementById('newCategory').value.trim();
             const itemName = document.getElementById('newItemName').value.trim();
-            const qty = document.getElementById('newItemQty').value;
-            const unit = document.getElementById('newItemUnit').value;
+            const qty = document.getElementById('newInitialQty').value;
+            const unit = document.getElementById('newUnit').value;
 
-            if (!category || !itemName) {
-                return alert("يرجى إدخال اسم القسم واسم المنتج الجديد!");
-            }
+            if (!category || !itemName) return alert("يرجى إدخال القسم واسم الصنف!");
 
             const btn = document.getElementById('newProdBtn');
-            btn.disabled = true;
-            btn.innerText = "⏳ جاري إضافة المنتج...";
+            btn.disabled = true; btn.innerText = "⏳ جاري الإضافة...";
 
             let formData = new FormData();
-            formData.append('action', 'addNewItem');
-            formData.append('sheet', category);
-            formData.append('item', itemName);
-            formData.append('quantity', qty);
-            formData.append('unit', unit);
-            formData.append('pass', activeToken);
+            formData.append('action', 'addNewItem'); formData.append('sheet', category);
+            formData.append('item', itemName); formData.append('quantity', qty);
+            formData.append('unit', unit); formData.append('pass', activeToken);
 
             try {
-                const response = await fetch(scriptURL, { method: 'POST', body: formData });
-                const result = await response.json();
-
-                if (result.error) {
-                    alert("⚠️ " + result.error);
-                } else {
-                    alert(`✅ تم إضافة المنتج "${itemName}" بنجاح في قسم "${category}"!`);
-                    document.getElementById('newCategory').value = '';
-                    document.getElementById('newItemName').value = '';
-                    document.getElementById('newItemQty').value = 1;
-                    await loadData();
+                const result = await inventoryPost(Object.fromEntries(formData));
+                if (errMsg(result)) alert("⚠️ " + errMsg(result));
+                else {
+                    alert(`✅ تم إضافة المنتج "${itemName}" للمخزن!`);
+                    document.getElementById('newCategory').value = ''; document.getElementById('newItemName').value = '';
+                    document.getElementById('newInitialQty').value = 1;
+                    await loadInventoryData();
                 }
-            } catch (error) {
-                alert("⚠️ حدث خطأ أثناء إضافة المنتج الجديد!");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "✨ إضافة المنتج للمخزن";
+            } catch (error) { alert("⚠️ حدث خطأ!"); } 
+            finally { btn.disabled = false; btn.innerText = "✨ حفظ الصنف في المخزن"; }
+        }
+
+        async function deleteProduct(sheet, item, btn) {
+            if (!confirm(`⚠️ تأكيد: هل تريد مسح الصنف "${item}" من المخزن؟`)) return;
+            let originalText = btn.innerText; btn.innerText = "⏳"; btn.disabled = true;
+
+            let formData = new FormData();
+            formData.append('action', 'deleteProduct'); formData.append('sheet', sheet);
+            formData.append('item', item); formData.append('pass', activeToken);
+
+            try {
+                const result = await inventoryPost(Object.fromEntries(formData));
+                if (errMsg(result)) alert("⚠️ " + errMsg(result));
+                else { alert(`✅ تم مسح "${item}" من المخزن.`); await loadInventoryData(); }
+            } catch (error) { alert("⚠️ حدث خطأ!"); } 
+            finally { btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        function renderPurchaseTable() {
+            renderHistory();
+            const tbody = document.getElementById('purchaseTableBody');
+            const filterValue = document.getElementById('filterCategory').value;
+            tbody.innerHTML = '';
+            let filteredData = purchaseDataGlobal;
+            if (filterValue !== 'الكل') filteredData = purchaseDataGlobal.filter(row => row.category === filterValue);
+            if (!filteredData || filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9">لا توجد طلبات مسجلة.</td></tr>'; return;
             }
+            filteredData.forEach(row => {
+                let statusClass = '', statusText = '';
+                let cat = row.category || 'غير محدد', reqName = row.requesterName || 'غير مسجل', item = row.item || 'غير محدد';
+                let reqQty = row.requested_qty || 0, unit = row.unit || '', fulfilled = row.fulfilled_from_stock || 0;
+                let needed = row.purchase_qty_needed || 0;
+                let dateDisplay = (row.date && row.date !== "1969-12-31" && row.date !== "undefined") ? row.date : "غير محدد";
+
+                if (row.status === 'PO_CONFIRMED') { statusClass = 'status-fulfilled'; statusText = 'تم الشراء والتوريد ✅'; }
+                else if (needed > 0) { statusClass = 'status-partial'; statusText = 'صُرف المتاح + مطلوب شراء'; }
+                else { statusClass = 'status-fulfilled'; statusText = 'مُصرف بالكامل من المخزن ✅'; }
+
+                let actionHtml = (needed > 0 && row.status !== 'PO_CONFIRMED') ? `<button class="btn-confirm" onclick="confirmPurchaseOrder(${row.row}, this)">تأكيد الشراء 📦</button>` : `-`;
+
+                tbody.innerHTML += `<tr>
+                    <td><span class="cat-badge">${cat}</span></td>
+                    <td style="color:#38bdf8; font-weight:bold;">${reqName}</td>
+                    <td style="font-weight:bold;">${item}</td>
+                    <td>${reqQty} ${unit}</td>
+                    <td>${fulfilled} ${unit}</td>
+                    <td style="font-weight: bold; color: ${needed > 0 ? '#ef4444' : '#f8fafc'};">${needed > 0 ? needed + ' ' + unit : '0'}</td>
+                    <td>${dateDisplay}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td>${actionHtml} <button class="btn-delete" style="margin-top: 5px;" onclick="deletePurchaseRecord(${row.row}, this)">مسح 🗑️</button></td>
+                </tr>`;
+            });
+        }
+
+        async function reloadPurchaseData() {
+            try {
+                const res = await fetch(purchaseURL + "?pass=" + encodeURIComponent(activeToken));
+                const data = await res.json();
+                purchaseDataGlobal = Array.isArray(data) ? data.reverse() : [];
+                renderPurchaseTable(); 
+            } catch (error) { console.error(error); }
+        }
+
+        function getBase64(file) { 
+            return new Promise((resolve, reject) => { 
+                if(!file) resolve(null);
+                const reader = new FileReader(); 
+                reader.readAsDataURL(file); 
+                reader.onload = () => resolve(reader.result.split(',')[1]); 
+                reader.onerror = error => reject(error); 
+            }); 
+        }
+
+        async function submitAdminPurchase(e) {
+            e.preventDefault();
+            const btn = document.getElementById('adminSubmitBtn');
+            btn.disabled = true; btn.innerText = "⏳ جاري المعالجة...";
+
+            try {
+                let file = document.getElementById('adminImage').files[0];
+                let payload = {
+                    action: 'add', pass: activeToken, category: document.getElementById('adminCat').value,
+                    requesterName: document.getElementById('adminRequester').value, contactNumber: document.getElementById('adminContact').value,
+                    item: document.getElementById('adminItem').value, qty: document.getElementById('adminQty').value,
+                    unit: document.getElementById('adminUnit').value, date: document.getElementById('adminDate').value,
+                    imageBase64: file ? await getBase64(file) : null, mimeType: file ? file.type : null, imageName: file ? file.name : null
+                };
+
+                const res = await fetch(purchaseURL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+                const result = await res.json();
+                console.log('Purchase response:', result);
+
+                if (errMsg(result)) { alert("⚠️ " + errMsg(result)); return; }
+
+                if (result.needed > 0) alert(`✅ تم صرف المتاح (${result.fulfilled}) وتوليد طلب بالنواقص (${result.needed})!`);
+                else alert(`✅ تم صرف كامل الكمية (${result.fulfilled}) من المخزون بنجاح!`);
+                if (result.foundInStock === false) alert('ℹ️ الصنف مش موجود في المخزن بنفس الاسم/القسم، فاتحسب كله مطلوب شراء.');
+
+                document.getElementById('purchaseForm').reset();
+                document.getElementById('adminDate').valueAsDate = new Date(); 
+                await reloadPurchaseData(); await loadInventoryData();
+            } catch (error) { console.error(error); alert("⚠️ حدث خطأ: " + error.message); } 
+            finally { btn.disabled = false; btn.innerText = "إرسال ومعالجة الطلب"; }
+        }
+
+        async function confirmPurchaseOrder(rowNum, btn) {
+            if(!confirm('📦 تأكيد: هل تم الشراء؟')) return;
+            let originalText = btn.innerText; btn.innerText = '⏳'; btn.disabled = true;
+            try {
+                const r = await (await fetch(purchaseURL, { method: 'POST', body: JSON.stringify({ action: 'confirmAndAdd', row: rowNum, pass: activeToken }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })).json();
+                if (errMsg(r)) { alert('⚠️ ' + errMsg(r)); btn.innerText = originalText; btn.disabled = false; return; }
+                alert('✅ تم التأكيد!'); await reloadPurchaseData(); await loadInventoryData();
+            } catch (e) { alert('⚠️ حدث خطأ!'); btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        async function deletePurchaseRecord(rowNum, btn) {
+            if(!confirm('⚠️ هل أنت متأكد من مسح الطلب؟')) return;
+            let originalText = btn.innerText; btn.innerText = '⏳'; btn.disabled = true;
+            try {
+                await fetch(purchaseURL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowNum, pass: activeToken }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+                alert('✅ تم المسح.'); await reloadPurchaseData(); 
+            } catch (e) { alert('⚠️ حدث خطأ.'); btn.innerText = originalText; btn.disabled = false; }
         }
     </script>
 </body>
